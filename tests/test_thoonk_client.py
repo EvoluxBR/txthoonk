@@ -36,7 +36,7 @@ class Test(unittest.TestCase):
             raise unittest.SkipTest(msg)
 
         endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
-        self.pubsub = yield endpoint.connect(ThoonkPubSubFactory(db=REDIS_DB))
+        self.pubsub = yield endpoint.connect(ThoonkPubSubFactory())
 
 
     def tearDown(self):
