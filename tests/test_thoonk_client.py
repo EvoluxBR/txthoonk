@@ -37,9 +37,10 @@ class Test(unittest.TestCase):
         self.redis.transport.loseConnection()
 
     @defer.inlineCallbacks
-    def testName(self):
+    def testPing(self):
         #self.assertEqual(True, True)
-        yield
+        a = yield self.thoonk.redis.ping()
+        self.assertEqual(a, 'PONG')
 
 
 if __name__ == "__main__":
