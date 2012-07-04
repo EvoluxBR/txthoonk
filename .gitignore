@@ -29,9 +29,9 @@ pip-log.txt
 # Debianization
 
 debian/files
-debian/python-txredis.debhelper.log
-debian/python-txredis.postinst.debhelper
-debian/python-txredis.prerm.debhelper
-debian/python-txredis.substvars
-debian/python-txredis/
+debian/python-txthoonk.debhelper.log
+debian/python-txthoonk.postinst.debhelper
+debian/python-txthoonk.prerm.debhelper
+debian/python-txthoonk.substvars
+debian/python-txthoonk/
 

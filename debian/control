@@ -1,11 +1,11 @@
-Source: txredis
+Source: txthoonk
 Maintainer: Iuri Diniz <iuridiniz@gmail.com>
 Section: python
 Priority: optional
 Build-Depends: python-setuptools (>= 0.6b3), debhelper (>= 7), python-support (>= 0.8.4)
 Standards-Version: 3.8.4
 
-Package: python-txredis
+Package: python-txthoonk
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}
 XB-Python-Version: ${python:Versions}
