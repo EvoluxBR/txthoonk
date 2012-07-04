@@ -9,8 +9,8 @@ from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint
 
 REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 15
+REDIS_PORT = 6381
+REDIS_DB = 1
 
 class Test(unittest.TestCase):
 
@@ -21,9 +21,13 @@ class Test(unittest.TestCase):
             self.redis = thoonk.redis
 
         def err_connect(res):
+            import os
+            redis_conf = os.path.join(os.path.dirname(__file__), "redis.conf")
             msg = ("NOTE: Redis server not running on %s:%s. Please start \n"
                     "a local instance of Redis on this port to run unit tests \n"
-                    "against.") % (REDIS_HOST, REDIS_PORT)
+                    "against.\n\n"
+                    "You can use our supplied config:\n"
+                    "  redis-server %s\n") % (REDIS_HOST, REDIS_PORT, redis_conf)
             raise unittest.SkipTest(msg)
 
         endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
