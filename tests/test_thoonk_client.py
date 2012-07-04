@@ -22,6 +22,8 @@ class Test(unittest.TestCase):
         def got_proto(thoonk):
             self.thoonk = thoonk
             self.redis = thoonk.redis
+            # flush
+            self.redis.flushdb()
 
         def err_connect(res):
             import os
