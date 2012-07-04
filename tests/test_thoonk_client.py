@@ -48,7 +48,7 @@ class Test(unittest.TestCase):
 
     @defer.inlineCallbacks
     def testPing(self):
-        a = yield self.thoonk.redis.ping()
+        a = yield self.redis.ping()
         self.assertEqual(a, 'PONG')
 
 
