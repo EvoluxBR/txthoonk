@@ -43,8 +43,7 @@ class Test(unittest.TestCase):
         def closeRedis():
             self.thoonk.redis.transport.loseConnection()
             self.pubsub.redis.transport.loseConnection()
-        reactor.callLater(0, closeRedis)
-
+        reactor.callLater(0, closeRedis) #@UndefinedVariable
 
     @defer.inlineCallbacks
     def testPing(self):
@@ -57,6 +56,7 @@ class Test(unittest.TestCase):
         yield self.thoonk.create_feed(feed_name)
         ret = yield self.thoonk.redis.smembers("feeds")
         self.assertEqual(set([feed_name]), ret)
+
 
 if __name__ == "__main__":
     pass
