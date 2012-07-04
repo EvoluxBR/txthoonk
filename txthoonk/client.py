@@ -5,15 +5,11 @@ from twisted.internet.protocol import ReconnectingClientFactory
 from txredis.protocol import Redis
 from twisted.internet import interfaces
 
-class Thoonk(object):
+class ThoonkBase(object):
     implements(interfaces.IProtocol)
     redis = Redis() # pydev: force code completion
     def __init__(self, redis):
         self.redis = redis
-
-    def create_feed(self, feed_name):
-        d = self.redis.sadd("feeds", feed_name)
-        return d
 
     def dataReceived(self, data):
         """
@@ -63,6 +59,12 @@ class Thoonk(object):
         send any greeting or initial message, do it here.
         """
         self.redis.connectionMade()
+
+class Thoonk(ThoonkBase):
+    def create_feed(self, feed_name):
+        d = self.redis.sadd("feeds", feed_name)
+        return d
+
 
 class ThoonkFactory(ReconnectingClientFactory):
     protocol = Redis
