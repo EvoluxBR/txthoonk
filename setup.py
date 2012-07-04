@@ -25,14 +25,13 @@ sdict = {
     'keywords': ['Redis', 'Thoonk', 'Twisted'],
     'long_description': read('README.rst'),
     'classifiers' : [
-        'Classifier: Development Status :: 1 - Planning',
+        'Development Status :: 1 - Planning',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'Classifier: License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.7',
         'Framework :: Twisted',
-        'Platform: OS Independent',
         ],
 }
 
