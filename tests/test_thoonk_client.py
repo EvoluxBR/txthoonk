@@ -25,7 +25,9 @@ class Test(unittest.TestCase):
                     "against.") % (REDIS_HOST, REDIS_PORT)
             raise unittest.SkipTest(msg)
 
-        clientCreator = protocol.ClientCreator(reactor, ThoonkFactory.protocol)
+        clientCreator = protocol.ClientCreator(reactor,
+                                               ThoonkFactory.protocol,
+                                               db=REDIS_DB)
         d = clientCreator.connectTCP(REDIS_HOST, REDIS_PORT)
 
         d.addCallback(got_proto)
