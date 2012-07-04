@@ -15,7 +15,10 @@ REDIS_DB = 1
 class Test(unittest.TestCase):
 
     def setUp(self):
-        from txthoonk.client import ThoonkFactory
+        from txthoonk.client import ThoonkFactory, Thoonk, Redis
+        self.redis = Redis() # pydev: force code completion
+        self.thoonk = Thoonk(None) # pydev: force code completion
+
         def got_proto(thoonk):
             self.thoonk = thoonk
             self.redis = thoonk.redis
