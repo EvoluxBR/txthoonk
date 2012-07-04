@@ -92,3 +92,10 @@ class ThoonkFactory(ReconnectingClientFactory):
         self.resetDelay()
         return self.protocol_wrapper(redis)
 
+class ThoonkPubSub(ThoonkBase):
+    pass
+
+class ThoonkPubSubFactory(ThoonkFactory):
+    protocol = Redis
+    protocol_wrapper = ThoonkPubSub
+
