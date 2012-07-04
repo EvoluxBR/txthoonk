@@ -51,6 +51,13 @@ class Test(unittest.TestCase):
         a = yield self.redis.ping()
         self.assertEqual(a, 'PONG')
 
+    @defer.inlineCallbacks
+    def testCreateFeed(self):
+        feed_name = 'test_feed'
+        yield self.thoonk.create_feed(feed_name)
+        ret = yield self.redis.smembers("feeds")
+        self.assertEqual(set([feed_name]), ret)
+
 
 if __name__ == "__main__":
     pass

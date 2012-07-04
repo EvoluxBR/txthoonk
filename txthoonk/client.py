@@ -11,6 +11,10 @@ class Thoonk(object):
     def __init__(self, redis):
         self.redis = redis
 
+    def create_feed(self, feed_name):
+        d = self.redis.sadd("feeds", feed_name)
+        return d
+
     def dataReceived(self, data):
         """
         Called whenever data is received.
