@@ -20,7 +20,8 @@ sdict = {
     'maintainer' : 'Iuri Diniz',
     'maintainer_email' : 'iuridiniz@gmail.com',
     'license': 'MIT',
-    'url': 'http://pypi.python.org/pypi/txthoonk',
+    'url': 'https://github.com/iuridiniz/txthoonk',
+    'download_url':'http://pypi.python.org/pypi/txthoonk',
     'keywords': ['Redis', 'Thoonk', 'Twisted'],
     'long_description': read('README.rst'),
     'classifiers' : [
