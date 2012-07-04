@@ -25,3 +25,13 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+# Debianization
+
+debian/files
+debian/python-txredis.debhelper.log
+debian/python-txredis.postinst.debhelper
+debian/python-txredis.prerm.debhelper
+debian/python-txredis.substvars
+debian/python-txredis/
+
