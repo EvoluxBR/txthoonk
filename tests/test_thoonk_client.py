@@ -20,11 +20,9 @@ class Test(unittest.TestCase):
             self.redis = redis
 
         def err_connect(res):
-            msg = '\n' * 3 + '*' * 80 + '\n' * 2
-            msg += ("NOTE: Redis server not running on %s:%s. Please start "
-                    "a local instance of Redis on this port to run unit tests "
-                    "against.\n\n") % (REDIS_HOST, REDIS_PORT)
-            msg += '*' * 80 + '\n' * 4
+            msg = ("NOTE: Redis server not running on %s:%s. Please start \n"
+                    "a local instance of Redis on this port to run unit tests \n"
+                    "against.") % (REDIS_HOST, REDIS_PORT)
             raise unittest.SkipTest(msg)
 
         clientCreator = protocol.ClientCreator(reactor, ThoonkFactory.protocol)
