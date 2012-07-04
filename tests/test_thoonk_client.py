@@ -4,8 +4,9 @@ Created on Jul 4, 2012
 @author: iuri
 '''
 from twisted.trial import unittest
-from twisted.internet import defer, protocol
+from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.internet.endpoints import TCP4ClientEndpoint
 
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
@@ -15,9 +16,9 @@ class Test(unittest.TestCase):
 
     def setUp(self):
         from txthoonk.client import ThoonkFactory
-        def got_proto(redis):
-            self.thoonk = ThoonkFactory.protocol_wrapper(redis)
-            self.redis = redis
+        def got_proto(thoonk):
+            self.thoonk = thoonk
+            self.redis = thoonk.redis
 
         def err_connect(res):
             msg = ("NOTE: Redis server not running on %s:%s. Please start \n"
@@ -25,10 +26,8 @@ class Test(unittest.TestCase):
                     "against.") % (REDIS_HOST, REDIS_PORT)
             raise unittest.SkipTest(msg)
 
-        clientCreator = protocol.ClientCreator(reactor,
-                                               ThoonkFactory.protocol,
-                                               db=REDIS_DB)
-        d = clientCreator.connectTCP(REDIS_HOST, REDIS_PORT)
+        endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
+        d = endpoint.connect(ThoonkFactory(db=REDIS_DB))
 
         d.addCallback(got_proto)
         d.addErrback(err_connect)
