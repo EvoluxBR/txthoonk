@@ -40,8 +40,11 @@ class Test(unittest.TestCase):
 
 
     def tearDown(self):
-        self.thoonk.redis.transport.loseConnection()
-        self.pubsub.redis.transport.loseConnection()
+        def closeRedis():
+            self.thoonk.redis.transport.loseConnection()
+            self.pubsub.redis.transport.loseConnection()
+        reactor.callLater(0, closeRedis)
+
 
     @defer.inlineCallbacks
     def testPing(self):
