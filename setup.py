@@ -11,7 +11,7 @@ def get_version():
     return v
 
 sdict = {
-    'name' : 'txredis',
+    'name' : 'txthoonk',
     'version' : get_version(),
     'packages' : ['txthoonk', 'tests'],
     'description' : 'Python/Twisted client for Thoonk',
