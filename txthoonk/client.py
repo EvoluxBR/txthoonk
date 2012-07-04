@@ -7,7 +7,7 @@ from twisted.internet import interfaces
 
 class Thoonk(object):
     implements(interfaces.IProtocol)
-
+    redis = Redis() # pydev: force code completion
     def __init__(self, redis):
         self.redis = redis
 
