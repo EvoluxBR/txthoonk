@@ -28,6 +28,7 @@ class Test(unittest.TestCase):
         endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
         try:
             self.thoonk = yield endpoint.connect(ThoonkFactory(db=REDIS_DB))
+            # flush redis database between calls
             self.thoonk.redis.flushdb()
         except:
             import os
@@ -96,6 +97,8 @@ class Test(unittest.TestCase):
         feed_name = 'test_feed'
 
         yield self.thoonk.create_feed(feed_name)
+
+        # check on redis
         ret = yield self.thoonk.redis.smembers("feeds")
         self.assertEqual(set([feed_name]), ret)
 
@@ -129,6 +132,7 @@ class Test(unittest.TestCase):
         yield self.thoonk.create_feed(feed1)
         yield cb
 
+        # check on redis
         ret = yield self.thoonk.redis.smembers("feeds")
         self.assertEqual(set([feed1]), ret)
 
@@ -144,6 +148,7 @@ class Test(unittest.TestCase):
         yield self.thoonk.create_feed(feed2)
         yield cb
 
+        # check on redis
         ret = yield self.thoonk.redis.smembers("feeds")
         self.assertEqual(set([feed2, feed1]), ret)
 
@@ -171,6 +176,7 @@ class Test(unittest.TestCase):
 
         yield self.thoonk.set_config(feed_name, config)
 
+        # check on redis
         ret = yield self.thoonk.redis.hgetall("feed.config:%s" % feed_name)
 
         self.assertEqual(ret, config)
