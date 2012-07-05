@@ -80,10 +80,15 @@ class ThoonkBase(object):
 class Thoonk(ThoonkBase):
     redis = Redis() # pydev: force code completion
 
-    def create_feed(self, feed_name):
+    def create_feed(self, feed_name, config={}):
+        def _set_config(ret):
+            return self.set_config(feed_name, config)
+
         def _publish(ret):
             if ret == 1:
-                return self.redis.publish("newfeed", self.SEPARATOR.join([feed_name, self._uuid]))
+                d = self.redis.publish("newfeed", self.SEPARATOR.join([feed_name, self._uuid]))
+                d.addCallback(_set_config)
+                return d
             else:
                 d = defer.Deferred()
                 d.errback(FeedExists())
