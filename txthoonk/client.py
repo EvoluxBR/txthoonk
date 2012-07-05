@@ -95,6 +95,21 @@ class Thoonk(ThoonkBase):
 
         return self.redis.sismember("feeds", feed_name)
 
+
+    def set_config(self, feed_name, config):
+        def _exists(ret):
+            if not ret:
+                d = defer.Deferred()
+                d.errback(FeedDoesNotExist())
+                return d
+
+            dl = []
+            for k, v in config.items():
+                dl.append(self.redis.hset('feed.config:%s' % feed_name, k, v))
+            return defer.DeferredList(dl)
+        return self.feed_exists(feed_name).addCallback(_exists)
+
+
 class ThoonkFactory(ReconnectingClientFactory):
     protocol = Redis
     protocol_wrapper = Thoonk
