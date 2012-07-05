@@ -81,6 +81,16 @@ class Thoonk(ThoonkBase):
     redis = Redis() # pydev: force code completion
 
     def create_feed(self, feed_name, config={}):
+        """
+        Create a new feed with a given configuration.
+        
+        The configuration is a dict, and should include a 'type'
+        entry with the class of the feed type implementation.
+        
+        Arguments:
+            feed -- The name of the new feed.
+            config -- A dictionary of configuration values.
+        """
         def _set_config(ret):
             return self.set_config(feed_name, config)
 
@@ -97,9 +107,23 @@ class Thoonk(ThoonkBase):
         return self.redis.sadd("feeds", feed_name).addCallback(_publish)
 
     def feed_exists(self, feed_name):
+        """
+        Check if a given feed exists.
+
+        Arguments:
+            feed -- The name of the feed.
+        """
+
         return self.redis.sismember("feeds", feed_name)
 
     def set_config(self, feed_name, config):
+        """
+        Set the configuration for a given feed.
+        
+        Arguments:
+            feed -- The name of the feed.
+            config -- A dictionary of configuration values.
+        """
         def _exists(ret):
             if not ret:
                 d = defer.Deferred()
@@ -113,6 +137,11 @@ class Thoonk(ThoonkBase):
         return self.feed_exists(feed_name).addCallback(_exists)
 
     def get_feed_names(self):
+        """
+        Return the set of known feeds.
+
+        Returns: a defer with the set result as first argument
+        """
         return self.redis.smembers("feeds")
 
 class ThoonkFactory(ReconnectingClientFactory):
@@ -194,6 +223,16 @@ class ThoonkPubSub(ThoonkBase):
         return d.addCallback(set_subscribed)
 
     def register_handler(self, evt, handler):
+        """
+        Register a function to respond to feed events.
+        
+        Event types:
+            - create
+        
+        Arguments:
+            evt -- The name of the feed event.
+            handler -- The function for handling the event.
+        """
         def register_callback(*args):
             id_ = self._handlers['id_gen'].next()
 
@@ -211,6 +250,13 @@ class ThoonkPubSub(ThoonkBase):
         return self._sub_channel('newfeed').addCallback(register_callback)
 
     def remove_handler(self, id_):
+        """
+        Unregister a function that was registered via register_handler
+
+        Arguments:
+            id_ - the handler id
+        """
+
         evt = self._handlers['id2evt'].get(id_)
         if not evt:
             return
