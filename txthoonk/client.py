@@ -92,9 +92,7 @@ class Thoonk(ThoonkBase):
         return self.redis.sadd("feeds", feed_name).addCallback(_publish)
 
     def feed_exists(self, feed_name):
-
         return self.redis.sismember("feeds", feed_name)
-
 
     def set_config(self, feed_name, config):
         def _exists(ret):
