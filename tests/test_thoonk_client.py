@@ -17,9 +17,9 @@ class Test(unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         from txthoonk.client import ThoonkFactory, Thoonk, ThoonkPubSub, \
-            ThoonkPubSubFactory
-        self.thoonk = Thoonk(None) # pydev: force code completion
-        self.pubsub = ThoonkPubSub(None) # pydev: force code completion
+            ThoonkPubSubFactory, Redis
+        self.thoonk = Thoonk(Redis()) # pydev: force code completion
+        self.pubsub = ThoonkPubSub(Redis()) # pydev: force code completion
 
         endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
         try:
