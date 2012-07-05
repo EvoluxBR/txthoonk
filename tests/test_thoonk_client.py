@@ -7,7 +7,6 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint
-from txthoonk.client import FeedExists, FeedDoesNotExist
 
 REDIS_HOST = "localhost"
 REDIS_PORT = 6381
@@ -137,7 +136,7 @@ class Test(unittest.TestCase):
         self.assertEqual(set([feed1]), ret)
 
         # same feed, must return a error
-
+        from txthoonk.client import FeedExists
         self.assertFailure(self.thoonk.create_feed(feed1), FeedExists)
 
         # removing
@@ -184,7 +183,9 @@ class Test(unittest.TestCase):
     def testSetConfig(self):
         feed_name = "test_feed"
         config = {'blow': '2', 'blew': '1'}
+
         # set config on a non existing feed
+        from txthoonk.client import FeedDoesNotExist
         self.assertFailure(self.thoonk.set_config(feed_name, config), FeedDoesNotExist)
 
         yield self.thoonk.create_feed(feed_name)
