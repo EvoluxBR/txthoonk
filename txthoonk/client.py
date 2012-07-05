@@ -91,6 +91,10 @@ class Thoonk(ThoonkBase):
 
         return self.redis.sadd("feeds", feed_name).addCallback(_publish)
 
+    def feed_exists(self, feed_name):
+
+        return self.redis.sismember("feeds", feed_name)
+
 class ThoonkFactory(ReconnectingClientFactory):
     protocol = Redis
     protocol_wrapper = Thoonk

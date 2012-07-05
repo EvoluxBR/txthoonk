@@ -147,6 +147,16 @@ class Test(unittest.TestCase):
         ret = yield self.thoonk.redis.smembers("feeds")
         self.assertEqual(set([feed2, feed1]), ret)
 
+    @defer.inlineCallbacks
+    def testFeedExists(self):
+        feed_name = "test_feed"
+        feed_exists = yield self.thoonk.feed_exists(feed_name)
+        self.assertFalse(feed_exists);
+
+        yield self.thoonk.create_feed(feed_name)
+        feed_exists = yield self.thoonk.feed_exists(feed_name)
+        self.assertTrue(feed_exists);
+
 
 if __name__ == "__main__":
     pass
