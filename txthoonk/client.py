@@ -7,8 +7,6 @@ from twisted.internet import interfaces
 
 import uuid
 import itertools
-from twisted.python import failure
-
 
 class FeedExists(Exception):
     pass
@@ -176,7 +174,6 @@ class ThoonkPubSub(ThoonkBase):
             d.callback(None)
 
         return self._subscribe().addCallback(register_callback)
-
 
     def remove_handler(self, id_):
         evt = self._handlers['id2evt'].get(id_)
