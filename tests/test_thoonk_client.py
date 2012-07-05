@@ -15,16 +15,6 @@ REDIS_DB = 1
 
 class Test(unittest.TestCase):
 
-    def check_called(self, func):
-        self.called[func] = False
-        def _check(*args, **kwargs):
-            self.called[func] = True
-            return func(*args, **kwargs)
-        return _check
-
-    def final_check(self):
-        for func in self.called.keys():
-            self.assertTrue(self.called[func], "%s was not called" % (func,))
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -54,15 +44,6 @@ class Test(unittest.TestCase):
 
         self._configure_wrappers()
 
-    def _configure_wrappers(self):
-        msgRcvOrig = self.pubsub.redis.messageReceived
-        self.msg_rcv = defer.Deferred()
-        def msgRcvWrp(*args, **kwargs):
-            msgRcvOrig(*args, **kwargs)
-            self.msg_rcv.callback(None)
-            self.msg_rcv = defer.Deferred()
-        self.pubsub.redis.messageReceived = msgRcvWrp
-
     def tearDown(self):
         def closeRedis(*args):
             self.thoonk.redis.transport.loseConnection()
@@ -75,11 +56,41 @@ class Test(unittest.TestCase):
 
         return reactor.callLater(0, closeRedis) #@UndefinedVariable
 
+    def _configure_wrappers(self):
+        msgRcvOrig = self.pubsub.redis.messageReceived
+        self.msg_rcv = defer.Deferred()
+        def msgRcvWrp(*args, **kwargs):
+            msgRcvOrig(*args, **kwargs)
+            self.msg_rcv.callback(None)
+            self.msg_rcv = defer.Deferred()
+        self.pubsub.redis.messageReceived = msgRcvWrp
+
+
+    def check_called(self, func):
+        """decorator to use in order to check if a callback was called"""
+        self.called[func] = False
+        def _check(*args, **kwargs):
+            self.called[func] = True
+            return func(*args, **kwargs)
+        return _check
+
+    def final_check(self):
+        """Check if callbacks marked was called """
+        for func in self.called.keys():
+            self.assertTrue(self.called[func], "%s was not called" % (func,))
+
+    ############################################################################
+    #  Tests Redis Connection 
+    ############################################################################
+
     @defer.inlineCallbacks
     def testPing(self):
         a = yield self.thoonk.redis.ping()
         self.assertEqual(a, 'PONG')
 
+    ############################################################################
+    #  Tests for create feed
+    ############################################################################
     @defer.inlineCallbacks
     def testCreateFeed(self):
         feed_name = 'test_feed'
@@ -102,7 +113,6 @@ class Test(unittest.TestCase):
         cb = self.msg_rcv
         yield self.thoonk.create_feed(feed1)
         yield cb
-
 
     @defer.inlineCallbacks
     def testHandlerCreateRemove(self):
