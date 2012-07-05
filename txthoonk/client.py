@@ -112,6 +112,8 @@ class Thoonk(ThoonkBase):
             return defer.DeferredList(dl)
         return self.feed_exists(feed_name).addCallback(_exists)
 
+    def get_feed_names(self):
+        return self.redis.smembers("feeds")
 
 class ThoonkFactory(ReconnectingClientFactory):
     protocol = Redis

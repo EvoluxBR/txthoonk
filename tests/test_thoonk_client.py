@@ -162,6 +162,21 @@ class Test(unittest.TestCase):
         feed_exists = yield self.thoonk.feed_exists(feed_name)
         self.assertTrue(feed_exists);
 
+
+    @defer.inlineCallbacks
+    def testFeedNames(self):
+        # no feeds
+        ret = yield self.thoonk.get_feed_names()
+        self.assertEqual(set(), ret)
+
+        # create some feeds
+        feeds = set(["feed1", "feed2", "feed3"])
+        for feed in feeds:
+            yield self.thoonk.create_feed(feed)
+
+        ret = yield self.thoonk.get_feed_names()
+        self.assertEqual(feeds, ret)
+
     ############################################################################
     #  Tests for config feed
     ############################################################################
