@@ -144,36 +144,47 @@ class ThoonkPubSub(ThoonkBase):
                           'evt_handlers': {'create': dict()},
                           'id2evt' : {}}
 
-        self._channels_maps = {"newfeed": "create", "onrock": None}
+        self._channels_maps = {"newfeed": "create"}
         # delay subscribe 
         self._subscribed = {'running': False,
-                            'subscribed': False,
-                            'defers': {},
-                            'dl': None}
+                            'subscribed': {},
+                            'running_for': None,
+                            'defer': None}
 
         super(ThoonkPubSub, self).__init__(redis)
 
-    def _subscribe(self):
-        if self._subscribed['subscribed']:
-            return defer.Deferred.callback(None)
+    def _get_sub_channel_cb(self, channel):
+        return lambda arg: self._sub_channel(channel)
+
+    def _sub_channel(self, channel):
+        """
+        Subscribe to a channel using a defer
+        """
+        if self._subscribed['subscribed'].get(channel):
+            # already subcribed
+            d = defer.Deferred()
+            d.callback(True)
+            return d
 
         if self._subscribed['running']:
-            return self._subscribed['dl']
+            # call it later, queue it
+            d = self._subscribed['defer']
+            d.addCallback(self._get_sub_channel_cb(channel))
+            return d
 
-        self._subscribed['running'] = True
         def set_subscribed(*args):
             self._subscribed['running'] = False
-            self._subscribed['subscribed'] = True
-            return None
+            self._subscribed['subscribed'][channel] = True
+            return True
 
-        for channel in self._channels_maps.keys():
-            self.redis.subscribe(channel)
-            d = defer.Deferred()
-            self._subscribed['defers'][channel] = d
+        self._subscribed['running'] = True
+        self.redis.subscribe(channel)
 
-        dl = defer.DeferredList(self._subscribed['defers'].values())
+        d = defer.Deferred()
+        self._subscribed['defer'] = d
+        self._subscribed['running_for'] = channel
 
-        return dl.addCallback(set_subscribed)
+        return d.addCallback(set_subscribed)
 
     def register_handler(self, evt, handler):
         def register_callback(*args):
@@ -190,7 +201,7 @@ class ThoonkPubSub(ThoonkBase):
             d = defer.Deferred()
             d.callback(None)
 
-        return self._subscribe().addCallback(register_callback)
+        return self._sub_channel('newfeed').addCallback(register_callback)
 
     def remove_handler(self, id_):
         evt = self._handlers['id2evt'].get(id_)
@@ -219,8 +230,10 @@ class ThoonkPubSub(ThoonkBase):
         """
         Called when a channel is subscribed to.
         """
-        d = self._subscribed['defers'][channel]
-        d.callback(None)
+        assert self._subscribed['running']
+        assert self._subscribed['running_for'] == channel
+        d = self._subscribed['defer']
+        d.callback(True)
 
 class ThoonkPubSubFactory(ThoonkFactory):
     protocol = RedisSubscriber
