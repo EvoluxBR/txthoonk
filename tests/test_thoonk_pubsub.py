@@ -244,5 +244,18 @@ class TestThoonkPubSub(TestThoonkBase):
         yield self.pub.delete_feed(feed1)
         yield cb
 
+    ############################################################################
+    #  Tests for feed types
+    ############################################################################
+    @defer.inlineCallbacks
+    def testTypeFeed(self):
+        feed_name = "test"
+        feed = yield self.pub.feed(feed_name)
+        from txthoonk.types import Feed
+        self.assertIsInstance(feed, Feed)
+
+        feed_exists = yield self.pub.feed_exists(feed_name)
+        self.assertTrue(feed_exists)
+
 if __name__ == "__main__":
     pass

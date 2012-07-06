@@ -7,6 +7,7 @@ from twisted.internet import interfaces
 
 import uuid
 import itertools
+from txthoonk.types import Feed
 
 try:
     from collection import OrderedDict
@@ -82,6 +83,27 @@ class ThoonkBase(object):
 
 class ThoonkPub(ThoonkBase):
     redis = Redis() # pydev: force code completion
+
+    def __init__(self, *args, **kwargs):
+        self.feed = self._get_feed_type(Feed, type_="feed")
+        super(ThoonkPub, self).__init__(*args, **kwargs)
+
+    def _get_feed_type(self, kls, type_):
+        config = {'type': type_}
+        def _create_type(feed_name):
+            def _get_feed(*args):
+                return kls(pub=self, name=feed_name)
+            def _exists(ret):
+                if ret:
+                    return _get_feed()
+
+                d = self.create_feed(feed_name, config)
+                d.addCallback(_get_feed)
+                return d
+
+            return self.feed_exists(feed_name).addCallback(_exists)
+
+        return _create_type
 
     def _publish_channel(self, channel, *args):
         args = list(args) + [self._uuid]
