@@ -13,7 +13,7 @@ REDIS_PORT = 6381
 REDIS_DB = 1
 
 class Test(unittest.TestCase):
-    timeout = 5
+    timeout = 1
 
     @defer.inlineCallbacks
     def setUp(self):
