@@ -109,9 +109,7 @@ class ThoonkPub(ThoonkBase):
                 d.addCallback(_set_config)
                 return d
             else:
-                d = defer.Deferred()
-                d.errback(FeedExists())
-                return d
+                return defer.fail(FeedExists())
 
         return self.redis.sadd("feeds", feed_name).addCallback(_publish)
 
@@ -135,9 +133,7 @@ class ThoonkPub(ThoonkBase):
         """
         def _exists(ret):
             if not ret:
-                d = defer.Deferred()
-                d.errback(FeedDoesNotExist())
-                return d
+                return defer.fail(FeedDoesNotExist())
 
             dl = []
             for k, v in config.items():
@@ -211,9 +207,7 @@ class ThoonkSub(ThoonkBase):
         """
         if self._subscribed['subscribed'].get(channel):
             # already subcribed
-            d = defer.Deferred()
-            d.callback(True)
-            return d
+            return defer.succeed(True)
 
         if self._subscribed['running']:
             # call it later, queue it
