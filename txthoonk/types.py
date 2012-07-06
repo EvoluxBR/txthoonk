@@ -24,3 +24,9 @@ class Feed(object):
         self.channel_edit = 'feed.edit:%s' % name
         self.channel_publish = 'feed.publish:%s' % name
 
+    def get_config(self):
+        return self.pub.get_config(self.name)
+
+    def set_config(self, conf):
+        return self.pub.set_config(self.name, conf)
+

@@ -39,6 +39,21 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(self.feed.channel_publish,
                          "feed.publish:%s" % self.feed_name)
 
+    @defer.inlineCallbacks
+    def testFeedSetGetConfig(self):
+        # get an existing config
+        ret = yield self.feed.get_config()
+        self.assertEqual(ret, self.config)
+
+        # set a config value
+        new_conf = {"max_length": '20'}
+        yield self.feed.set_config(new_conf)
+
+        self.config.update(new_conf)
+
+        ret = yield self.feed.get_config()
+        self.assertEqual(ret, self.config)
+
     def testFeedPublish(self):
         pass
 
