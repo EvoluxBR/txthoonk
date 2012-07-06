@@ -180,10 +180,8 @@ class ThoonkSub(ThoonkBase):
 
     def __init__(self, redis):
         self._handlers = {'id_gen': itertools.count(), #@UndefinedVariable
-                          'evt_handlers': {'create': OrderedDict()},
-                          'id2evt' : {}}
-
-        self._channels_maps = {"newfeed": "create"}
+                          'channel_handlers': {'newfeed': OrderedDict()},
+                          'id2channel' : {}}
         # delay subscribe 
         self._subscribed = {'running': False,
                             'subscribed': {},
@@ -244,17 +242,20 @@ class ThoonkSub(ThoonkBase):
             id_ = self._handlers['id_gen'].next()
 
             # store map id -> evt
-            self._handlers['id2evt'][id_] = evt
+            self._handlers['id2channel'][id_] = evt
 
             # store handler on evt
-            self._handlers['evt_handlers'][evt][id_] = handler
+            self._handlers['channel_handlers'][evt][id_] = handler
             return id_
 
-        if evt not in self._handlers['evt_handlers'].keys():
-            d = defer.Deferred()
-            d.callback(None)
+        # XXX: Compat thoonk.py uses a create instead of newfeed
+        if evt == "create":
+            evt = "newfeed"
 
-        return self._sub_channel('newfeed').addCallback(register_callback)
+        if evt not in self._handlers['channel_handlers'].keys():
+            return defer.succeed(None)
+
+        return self._sub_channel(evt).addCallback(register_callback)
 
     def remove_handler(self, id_):
         """
@@ -264,26 +265,27 @@ class ThoonkSub(ThoonkBase):
             id_ - the handler id
         """
 
-        evt = self._handlers['id2evt'].get(id_)
+        evt = self._handlers['id2channel'].get(id_)
         if not evt:
             return
 
-        del self._handlers['evt_handlers'][evt][id_]
-        del self._handlers['id2evt'][id_]
+        del self._handlers['channel_handlers'][evt][id_]
+        del self._handlers['id2channel'][id_]
 
     def messageReceived(self, channel, message):
         """
         Called when this connection is subscribed to a channel that
         has received a message published on it.
         """
-        evt = self._channels_maps.get(channel)
-        if evt is None:
+
+        handlers = self._handlers['channel_handlers'].get(channel)
+        if handlers is None:
             return
 
         if not self.SEPARATOR in message:
             return
 
-        for handler in self._handlers['evt_handlers'][evt].values():
+        for handler in handlers.values():
             handler(message.split(self.SEPARATOR)[0])
 
     def channelSubscribed(self, channel, numSubscriptions):
