@@ -204,6 +204,23 @@ class ThoonkPub(ThoonkBase):
 
         return self.feed_exists(feed_name).addCallback(_exists)
 
+    def get_config(self, feed_name):
+        """
+        Get the configuration for a given feed.
+
+        Arguments:
+            feed_name -- The name of the feed.
+
+        Returns a defer to the config dict as the first argument
+        """
+        def _exists(ret):
+            if not ret:
+                return defer.fail(FeedDoesNotExist())
+
+            return self.redis.hgetall('feed.config:%s' % feed_name)
+
+        return self.feed_exists(feed_name).addCallback(_exists)
+
     def get_feed_names(self):
         """
         Return the set of known feeds.

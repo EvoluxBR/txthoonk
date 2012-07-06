@@ -202,6 +202,18 @@ class TestThoonkPubSub(TestThoonkBase):
 
         self.assertEqual(ret, config)
 
+    @defer.inlineCallbacks
+    def testGetConfig(self):
+        feed_name = "test_feed"
+        config = {'blow': '2', 'blew': '1'}
+
+        yield self.pub.create_feed(feed_name)
+        yield self.pub.set_config(feed_name, config)
+
+        # get the config
+        ret = yield self.pub.get_config(feed_name)
+        self.assertEqual(ret, config)
+
     ############################################################################
     #  Tests for delete feed
     ############################################################################
