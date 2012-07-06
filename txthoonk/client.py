@@ -8,6 +8,11 @@ from twisted.internet import interfaces
 import uuid
 import itertools
 
+try:
+    from collection import OrderedDict
+except ImportError:
+    OrderedDict = dict
+
 class FeedExists(Exception):
     pass
 
@@ -179,7 +184,7 @@ class ThoonkSub(ThoonkBase):
 
     def __init__(self, redis):
         self._handlers = {'id_gen': itertools.count(), #@UndefinedVariable
-                          'evt_handlers': {'create': dict()},
+                          'evt_handlers': {'create': OrderedDict()},
                           'id2evt' : {}}
 
         self._channels_maps = {"newfeed": "create"}
