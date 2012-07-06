@@ -106,7 +106,11 @@ class ThoonkPub(ThoonkBase):
         return _create_type
 
     def _publish_channel(self, channel, *args):
+        """Calls self.publish_channel appeding self._uuid"""
         args = list(args) + [self._uuid]
+        return self.publish_channel(channel, *args)
+
+    def publish_channel(self, channel, *args):
         return self.redis.publish(channel, self.SEPARATOR.join(args))
 
     def create_feed(self, feed_name, config={}):
@@ -276,7 +280,8 @@ class ThoonkSub(ThoonkBase):
         return lambda arg: self._sub_channel(channel)
 
     def _evt2channel(self, evt):
-        channel = None
+        # Thoonk.py compatible events
+        channel = evt
         if evt == "create":
             channel = "newfeed"
         elif evt == "delete":
@@ -340,7 +345,6 @@ class ThoonkSub(ThoonkBase):
             # store map id -> channel
             self._handlers['id2channel'][id_] = channel
 
-
             handlers = self._handlers['channel_handlers'].get(channel)
             if not handlers:
                 handlers = self._handlers['channel_handlers'][channel] = OrderedDict()
@@ -375,11 +379,8 @@ class ThoonkSub(ThoonkBase):
         if handlers is None:
             return
 
-        if not self.SEPARATOR in message:
-            return
-
         for handler in handlers.values():
-            handler(message.split(self.SEPARATOR)[0])
+            handler(*message.split(self.SEPARATOR))
 
     def channelSubscribed(self, channel, numSubscriptions):
         """

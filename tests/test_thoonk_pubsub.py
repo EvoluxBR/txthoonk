@@ -111,7 +111,7 @@ class TestThoonkPubSub(TestThoonkBase):
         feed1 = 'feed1'
 
         @self.check_called
-        def onCreate(ret_name):
+        def onCreate(ret_name, *args):
             self.assertEqual(ret_name, feed1)
 
         yield self.sub.register_handler('create', onCreate)
@@ -127,7 +127,7 @@ class TestThoonkPubSub(TestThoonkBase):
         feed2 = 'feed2'
 
         @self.check_called
-        def onCreate(ret_name):
+        def onCreate(ret_name, *args):
             self.assertEqual(ret_name, feed1)
         id_ = yield self.sub.register_handler('create', onCreate)
 
@@ -245,7 +245,7 @@ class TestThoonkPubSub(TestThoonkBase):
         feed1 = 'feed1'
 
         @self.check_called
-        def onDelete(ret_name):
+        def onDelete(ret_name, *args):
             self.assertEqual(ret_name, feed1)
 
         yield self.sub.register_handler('delete', onDelete)
@@ -268,6 +268,25 @@ class TestThoonkPubSub(TestThoonkBase):
 
         feed_exists = yield self.pub.feed_exists(feed_name)
         self.assertTrue(feed_exists)
+
+
+    ############################################################################
+    #  Tests for publish_channel
+    ############################################################################
+    @defer.inlineCallbacks
+    def testPublishChannel(self):
+        args = self.pub.SEPARATOR.join(['a', 'b'])
+
+        @self.check_called
+        def onMyChannel(*ret_args):
+            pass
+
+        yield self.sub.register_handler('mychannel', onMyChannel)
+
+        # Assuring that redis.messageReceived (sub) was called
+        cb = self.msg_rcv
+        yield self.pub.publish_channel("mychannel", *args)
+        yield cb
 
 if __name__ == "__main__":
     pass

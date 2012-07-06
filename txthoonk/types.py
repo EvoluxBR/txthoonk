@@ -49,9 +49,9 @@ class Feed(object):
                 # check if feed_name existed when was deleted
                 non_exists = multi_result[-1]
                 if non_exists:
-                    d = pub._publish_channel(self.channel_publish, id_, item)
+                    d = pub.publish_channel(self.channel_publish, id_, item)
                 else:
-                    d = pub._publish_channel(self.channel_edit, id_, item)
+                    d = pub.publish_channel(self.channel_edit, id_, item)
 
                 # return the id
                 d.addCallback(lambda x: id_)
@@ -73,7 +73,7 @@ class Feed(object):
                     continue
                 defers += [redis.zrem(self.feed_ids, i)]
                 defers += [redis.hel(self.feed_items, i)]
-                defers += [pub._publish_channel(self.channel_retract, id)]
+                defers += [pub.publish_channel(self.channel_retract, id)]
 
             defers += [redis.incr(self.feed_publishes)] # -3
             defers += [redis.hset(self.feed_items, id_, item)] # -2
