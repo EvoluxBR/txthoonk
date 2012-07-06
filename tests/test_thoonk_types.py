@@ -126,5 +126,32 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(set(ret_ids), set(ids))
         self.assertEqual(set(ret_items), set(items))
 
+    @defer.inlineCallbacks
+    def testFeedGetAllMaxLength(self):
+        import string
+
+        items_01 = string.printable[0:20]
+        ids_01 = map(str, range(0, len(items_01)))
+        items_02 = string.printable[20:40]
+        ids_02 = map(str, range(0, len(items_01)))
+
+        feed = self.feed
+
+        # set max_length
+        feed.set_config({'max_length': '20'})
+
+        for id_, item in zip(ids_01, items_01):
+            yield feed.publish(item, id_)
+
+        ret = yield feed.get_ids()
+        self.assertEqual(set(ret), set(ids_01))
+
+        for id_, item in zip(ids_02, items_02):
+            yield feed.publish(item, id_)
+
+        ret = yield feed.get_ids()
+        self.assertEqual(set(ret), set(ids_01))
+
+
 if __name__ == "__main__":
     pass
