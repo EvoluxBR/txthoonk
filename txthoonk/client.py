@@ -89,6 +89,10 @@ class ThoonkBase(object):
 class ThoonkPub(ThoonkBase):
     redis = Redis() # pydev: force code completion
 
+    def _publish_channel(self, channel, *args):
+        args = list(args) + [self._uuid]
+        return self.redis.publish(channel, self.SEPARATOR.join(args))
+
     def create_feed(self, feed_name, config={}):
         """
         Create a new feed with a given configuration.
@@ -105,7 +109,7 @@ class ThoonkPub(ThoonkBase):
 
         def _publish(ret):
             if ret == 1:
-                d = self.redis.publish("newfeed", self.SEPARATOR.join([feed_name, self._uuid]))
+                d = self._publish_channel("newfeed", feed_name)
                 d.addCallback(_set_config)
                 return d
             else:
