@@ -75,7 +75,7 @@ class Test(unittest.TestCase):
         return _check
 
     def final_check(self):
-        """Check if callbacks marked was called """
+        """Check if callbacks marked were called"""
         for func in self.called.keys():
             self.assertTrue(self.called[func], "%s was not called" % (func,))
 
