@@ -12,4 +12,6 @@ class Feed(object):
         '''
         Constructor
         '''
+        self.pub = pub
+        self.name = name
 
