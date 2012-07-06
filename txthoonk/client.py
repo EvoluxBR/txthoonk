@@ -19,12 +19,6 @@ class FeedExists(Exception):
 class FeedDoesNotExist(Exception):
     pass
 
-class Empty(Exception):
-    pass
-
-class NotListening(Exception):
-    pass
-
 
 class ThoonkBase(object):
     SEPARATOR = "\x00"
