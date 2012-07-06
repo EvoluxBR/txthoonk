@@ -82,5 +82,21 @@ class TestThoonkFeed(TestThoonkBase):
         ret = yield self.pub.redis.hget(feed.feed_items, id_)
         self.assertEqual(ret[id_], item)
 
+    @defer.inlineCallbacks
+    def testFeedGetItem(self):
+        item = "my beautiful item"
+        id_ = "myid"
+        feed = self.feed
+
+        yield feed.publish(item, id_)
+
+        ret = yield feed.get_item(id_)
+        self.assertEqual(ret, {id_: item})
+
+        # non existing item
+        ret = yield feed.get_item(id_ + "123")
+        self.assertIsNone(ret)
+
+
 if __name__ == "__main__":
     pass

@@ -104,3 +104,6 @@ class Feed(object):
         defers.append(redis.watch(self.feed_ids)) #1
         defers.append(self.get_config()) #2
         return defer.DeferredList(defers).addCallback(_got_config)
+
+    def get_item(self, id_):
+        return self.pub.redis.hget(self.feed_items, id_)
