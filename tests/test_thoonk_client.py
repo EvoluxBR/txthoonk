@@ -12,7 +12,7 @@ REDIS_HOST = "localhost"
 REDIS_PORT = 6381
 REDIS_DB = 1
 
-class Test(unittest.TestCase):
+class TestThoonkBase(unittest.TestCase):
     timeout = 1
 
     @defer.inlineCallbacks
@@ -82,6 +82,8 @@ class Test(unittest.TestCase):
         for func in self.called.keys():
             self.assertTrue(self.called[func], "%s was not called" % (func,))
 
+
+class TestThoonkPubSub(TestThoonkBase):
     ############################################################################
     #  Tests Redis Connection 
     ############################################################################
