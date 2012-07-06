@@ -127,7 +127,7 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(set(ret_items), set(items))
 
     @defer.inlineCallbacks
-    def testFeedGetAllMaxLength(self):
+    def testFeedPublishWithMaxLength(self):
         import string
 
         items_01 = string.printable[0:20]
