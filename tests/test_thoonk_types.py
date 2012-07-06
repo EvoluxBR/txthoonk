@@ -6,7 +6,6 @@ Created on Jul 6, 2012
 from tests.test_thoonk_pubsub import TestThoonkBase
 from twisted.internet import defer
 
-
 class TestThoonkFeed(TestThoonkBase):
     @defer.inlineCallbacks
     def setUp(self):
@@ -39,6 +38,9 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(self.feed.channel_publish,
                          "feed.publish:%s" % self.feed_name)
 
+    ############################################################################
+    #  Tests for config
+    ############################################################################
     @defer.inlineCallbacks
     def testFeedSetGetConfig(self):
         # get an existing config
@@ -54,6 +56,9 @@ class TestThoonkFeed(TestThoonkBase):
         ret = yield self.feed.get_config()
         self.assertEqual(ret, self.config)
 
+    ############################################################################
+    #  Tests for publish/get
+    ############################################################################
     @defer.inlineCallbacks
     def testFeedPublish(self):
         item = "my beautiful item"
