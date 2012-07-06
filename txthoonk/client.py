@@ -197,6 +197,7 @@ class ThoonkSub(ThoonkBase):
         super(ThoonkSub, self).__init__(redis)
 
     def set_redis(self, redis):
+        # FIXME: on (re)connect (re)subscribe all channels
         redis.messageReceived = self.messageReceived
         redis.channelSubscribed = self.channelSubscribed
         super(ThoonkSub, self).set_redis(redis)
