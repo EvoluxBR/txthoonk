@@ -54,8 +54,28 @@ class TestThoonkFeed(TestThoonkBase):
         ret = yield self.feed.get_config()
         self.assertEqual(ret, self.config)
 
+    @defer.inlineCallbacks
     def testFeedPublish(self):
-        pass
+        item = "my beautiful item"
+        feed = self.feed
+
+        # no publishes (check on redis)
+        n = yield self.pub.redis.get(feed.feed_publishes)
+        self.assertFalse(n)
+
+        id_ = yield feed.publish(item)
+
+        # check on redis for new id
+        ret = yield self.pub.redis.zrange(feed.feed_ids, 0, -1)
+        self.assertTrue(ret, [id_])
+
+        # check on redis for publishes increment
+        n = yield self.pub.redis.get(feed.feed_publishes)
+        self.assertEqual(n, '1')
+
+        # check on redis for new item
+        ret = yield self.pub.redis.hget(feed.feed_items, id_)
+        self.assertEqual(ret[id_], item)
 
 if __name__ == "__main__":
     pass
