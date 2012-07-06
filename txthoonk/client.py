@@ -227,7 +227,7 @@ class ThoonkSub(ThoonkBase):
 
     def __init__(self, redis):
         self._handlers = {'id_gen': itertools.count(), #@UndefinedVariable
-                          'channel_handlers': {'newfeed': OrderedDict()},
+                          'channel_handlers': {},
                           'id2channel' : {}}
         # delay subscribe 
         self._subscribed = {'running': False,
@@ -239,6 +239,14 @@ class ThoonkSub(ThoonkBase):
 
     def _get_sub_channel_cb(self, channel):
         return lambda arg: self._sub_channel(channel)
+
+    def _evt2channel(self, evt):
+        channel = None
+        if evt == "create":
+            channel = "newfeed"
+        elif evt == "delete":
+            channel = "delfeed"
+        return channel
 
     def _sub_channel(self, channel):
         """
@@ -280,29 +288,33 @@ class ThoonkSub(ThoonkBase):
         
         Event types:
             - create
+            - delete
         
         Arguments:
             evt -- The name of the feed event.
             handler -- The function for handling the event.
         """
+        channel = self._evt2channel(evt)
+
+        if not channel:
+            return defer.succeed(None)
+
         def register_callback(*args):
             id_ = self._handlers['id_gen'].next()
 
-            # store map id -> evt
-            self._handlers['id2channel'][id_] = evt
+            # store map id -> channel
+            self._handlers['id2channel'][id_] = channel
 
-            # store handler on evt
-            self._handlers['channel_handlers'][evt][id_] = handler
+
+            handlers = self._handlers['channel_handlers'].get(channel)
+            if not handlers:
+                handlers = self._handlers['channel_handlers'][channel] = OrderedDict()
+
+            # store handler
+            handlers[id_] = handler
             return id_
 
-        # XXX: Compat thoonk.py uses a create instead of newfeed
-        if evt == "create":
-            evt = "newfeed"
-
-        if evt not in self._handlers['channel_handlers'].keys():
-            return defer.succeed(None)
-
-        return self._sub_channel(evt).addCallback(register_callback)
+        return self._sub_channel(channel).addCallback(register_callback)
 
     def remove_handler(self, id_):
         """
@@ -312,11 +324,11 @@ class ThoonkSub(ThoonkBase):
             id_ - the handler id
         """
 
-        evt = self._handlers['id2channel'].get(id_)
-        if not evt:
+        channel = self._handlers['id2channel'].get(id_)
+        if not channel:
             return
 
-        del self._handlers['channel_handlers'][evt][id_]
+        del self._handlers['channel_handlers'][channel][id_]
         del self._handlers['id2channel'][id_]
 
     def messageReceived(self, channel, message):

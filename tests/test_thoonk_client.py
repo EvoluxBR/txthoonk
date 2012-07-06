@@ -226,6 +226,21 @@ class Test(unittest.TestCase):
         ret = yield self.pub.redis.hgetall("feed.config:%s" % feed_name)
         self.assertEqual(ret, {})
 
+    @defer.inlineCallbacks
+    def testHandlerDeleteFeed(self):
+        feed1 = 'feed1'
+
+        @self.check_called
+        def onDelete(ret_name):
+            self.assertEqual(ret_name, feed1)
+
+        yield self.sub.register_handler('delete', onDelete)
+
+        yield self.pub.create_feed(feed1)
+        # Assuring that redis.messageReceived (sub) was called
+        cb = self.msg_rcv
+        yield self.pub.delete_feed(feed1)
+        yield cb
 
 if __name__ == "__main__":
     pass
