@@ -110,3 +110,6 @@ class Feed(object):
 
     def get_ids(self):
         return self.pub.redis.zrange(self.feed_ids, 0, -1)
+
+    def get_all(self):
+        return self.pub.redis.hgetall(self.feed_items)

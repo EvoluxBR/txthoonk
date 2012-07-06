@@ -108,5 +108,23 @@ class TestThoonkFeed(TestThoonkBase):
         ret = yield feed.get_ids()
         self.assertEqual(ret, [id_])
 
+    @defer.inlineCallbacks
+    def testFeedGetAll(self):
+        import string
+        items = string.printable
+        ids = map(str, range(0, len(items)))
+        feed = self.feed
+        for id_, item in zip(ids, items):
+            yield feed.publish(item, id_)
+
+        ret = yield feed.get_ids()
+        self.assertEqual(set(ret), set(ids))
+
+        ret = yield feed.get_all()
+        ret_ids = ret.keys()
+        ret_items = ret.values()
+        self.assertEqual(set(ret_ids), set(ids))
+        self.assertEqual(set(ret_items), set(items))
+
 if __name__ == "__main__":
     pass
