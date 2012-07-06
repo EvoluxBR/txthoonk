@@ -19,16 +19,16 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.called = dict()
 
-        from txthoonk.client import ThoonkFactory, Thoonk, ThoonkPubSub, \
-            ThoonkPubSubFactory, Redis
-        self.thoonk = Thoonk(Redis()) # pydev: force code completion
-        self.pubsub = ThoonkPubSub(Redis()) # pydev: force code completion
+        from txthoonk.client import ThoonkPubFactory, ThoonkPub, ThoonkSub, \
+            ThoonkSubFactory, Redis
+        self.pub = ThoonkPub(Redis()) # pydev: force code completion
+        self.sub = ThoonkSub(Redis()) # pydev: force code completion
 
         endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
         try:
-            self.thoonk = yield endpoint.connect(ThoonkFactory(db=REDIS_DB))
+            self.pub = yield endpoint.connect(ThoonkPubFactory(db=REDIS_DB))
             # flush redis database between calls
-            self.thoonk.redis.flushdb()
+            self.pub.redis.flushdb()
         except:
             import os
             redis_conf = os.path.join(os.path.dirname(__file__), "redis.conf")
@@ -40,14 +40,14 @@ class Test(unittest.TestCase):
             raise unittest.SkipTest(msg)
 
         endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
-        self.pubsub = yield endpoint.connect(ThoonkPubSubFactory())
+        self.sub = yield endpoint.connect(ThoonkSubFactory())
 
         self._configure_wrappers()
 
     def tearDown(self):
         def closeRedis(*args):
-            self.thoonk.redis.transport.loseConnection()
-            self.pubsub.redis.transport.loseConnection()
+            self.pub.redis.transport.loseConnection()
+            self.sub.redis.transport.loseConnection()
             self.final_check()
         #d = defer.Deferred()
         #d.addCallback(closeRedis)
@@ -57,13 +57,13 @@ class Test(unittest.TestCase):
         return reactor.callLater(0, closeRedis) #@UndefinedVariable
 
     def _configure_wrappers(self):
-        msgRcvOrig = self.pubsub.redis.messageReceived
+        msgRcvOrig = self.sub.redis.messageReceived
         self.msg_rcv = defer.Deferred()
         def msgRcvWrp(*args, **kwargs):
             msgRcvOrig(*args, **kwargs)
             self.msg_rcv.callback(None)
             self.msg_rcv = defer.Deferred()
-        self.pubsub.redis.messageReceived = msgRcvWrp
+        self.sub.redis.messageReceived = msgRcvWrp
 
 
     def check_called(self, func):
@@ -85,7 +85,7 @@ class Test(unittest.TestCase):
 
     @defer.inlineCallbacks
     def testPing(self):
-        a = yield self.thoonk.redis.ping()
+        a = yield self.pub.redis.ping()
         self.assertEqual(a, 'PONG')
 
     ############################################################################
@@ -95,10 +95,10 @@ class Test(unittest.TestCase):
     def testCreateFeed(self):
         feed_name = 'test_feed'
 
-        yield self.thoonk.create_feed(feed_name)
+        yield self.pub.create_feed(feed_name)
 
         # check on redis
-        ret = yield self.thoonk.redis.smembers("feeds")
+        ret = yield self.pub.redis.smembers("feeds")
         self.assertEqual(set([feed_name]), ret)
 
     @defer.inlineCallbacks
@@ -109,11 +109,11 @@ class Test(unittest.TestCase):
         def onCreate(ret_name):
             self.assertEqual(ret_name, feed1)
 
-        yield self.pubsub.register_handler('create', onCreate)
+        yield self.sub.register_handler('create', onCreate)
 
-        # Assuring that redis.messageReceived (pubsub was called)
+        # Assuring that redis.messageReceived (sub was called)
         cb = self.msg_rcv
-        yield self.thoonk.create_feed(feed1)
+        yield self.pub.create_feed(feed1)
         yield cb
 
     @defer.inlineCallbacks
@@ -124,56 +124,56 @@ class Test(unittest.TestCase):
         @self.check_called
         def onCreate(ret_name):
             self.assertEqual(ret_name, feed1)
-        id_ = yield self.pubsub.register_handler('create', onCreate)
+        id_ = yield self.sub.register_handler('create', onCreate)
 
-        # Assuring that redis.messageReceived (pubsub was called)
+        # Assuring that redis.messageReceived (sub was called)
         cb = self.msg_rcv
-        yield self.thoonk.create_feed(feed1)
+        yield self.pub.create_feed(feed1)
         yield cb
 
         # check on redis
-        ret = yield self.thoonk.redis.smembers("feeds")
+        ret = yield self.pub.redis.smembers("feeds")
         self.assertEqual(set([feed1]), ret)
 
         # same feed, must return a error
         from txthoonk.client import FeedExists
-        self.assertFailure(self.thoonk.create_feed(feed1), FeedExists)
+        self.assertFailure(self.pub.create_feed(feed1), FeedExists)
 
         # removing
-        self.pubsub.remove_handler(id_)
+        self.sub.remove_handler(id_)
 
-        # Assuring that redis.messageReceived (pubsub was called)
+        # Assuring that redis.messageReceived (sub was called)
         cb = self.msg_rcv
-        yield self.thoonk.create_feed(feed2)
+        yield self.pub.create_feed(feed2)
         yield cb
 
         # check on redis
-        ret = yield self.thoonk.redis.smembers("feeds")
+        ret = yield self.pub.redis.smembers("feeds")
         self.assertEqual(set([feed2, feed1]), ret)
 
     @defer.inlineCallbacks
     def testFeedExists(self):
         feed_name = "test_feed"
-        feed_exists = yield self.thoonk.feed_exists(feed_name)
+        feed_exists = yield self.pub.feed_exists(feed_name)
         self.assertFalse(feed_exists);
 
-        yield self.thoonk.create_feed(feed_name)
-        feed_exists = yield self.thoonk.feed_exists(feed_name)
+        yield self.pub.create_feed(feed_name)
+        feed_exists = yield self.pub.feed_exists(feed_name)
         self.assertTrue(feed_exists);
 
 
     @defer.inlineCallbacks
     def testFeedNames(self):
         # no feeds
-        ret = yield self.thoonk.get_feed_names()
+        ret = yield self.pub.get_feed_names()
         self.assertEqual(set(), ret)
 
         # create some feeds
         feeds = set(["feed1", "feed2", "feed3"])
         for feed in feeds:
-            yield self.thoonk.create_feed(feed)
+            yield self.pub.create_feed(feed)
 
-        ret = yield self.thoonk.get_feed_names()
+        ret = yield self.pub.get_feed_names()
         self.assertEqual(feeds, ret)
 
     ############################################################################
@@ -186,14 +186,14 @@ class Test(unittest.TestCase):
 
         # set config on a non existing feed
         from txthoonk.client import FeedDoesNotExist
-        self.assertFailure(self.thoonk.set_config(feed_name, config), FeedDoesNotExist)
+        self.assertFailure(self.pub.set_config(feed_name, config), FeedDoesNotExist)
 
-        yield self.thoonk.create_feed(feed_name)
+        yield self.pub.create_feed(feed_name)
 
-        yield self.thoonk.set_config(feed_name, config)
+        yield self.pub.set_config(feed_name, config)
 
         # check on redis
-        ret = yield self.thoonk.redis.hgetall("feed.config:%s" % feed_name)
+        ret = yield self.pub.redis.hgetall("feed.config:%s" % feed_name)
 
         self.assertEqual(ret, config)
 

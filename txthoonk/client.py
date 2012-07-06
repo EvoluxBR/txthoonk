@@ -77,7 +77,7 @@ class ThoonkBase(object):
         """
         self.redis.connectionMade()
 
-class Thoonk(ThoonkBase):
+class ThoonkPub(ThoonkBase):
     redis = Redis() # pydev: force code completion
 
     def create_feed(self, feed_name, config={}):
@@ -144,9 +144,9 @@ class Thoonk(ThoonkBase):
         """
         return self.redis.smembers("feeds")
 
-class ThoonkFactory(ReconnectingClientFactory):
+class ThoonkPubFactory(ReconnectingClientFactory):
     protocol = Redis
-    protocol_wrapper = Thoonk
+    protocol_wrapper = ThoonkPub
 
     def __init__(self, *args, **kwargs):
         self._args = args
@@ -170,7 +170,7 @@ class ThoonkFactory(ReconnectingClientFactory):
         self.resetDelay()
         return self.protocol_wrapper(redis)
 
-class ThoonkPubSub(ThoonkBase):
+class ThoonkSub(ThoonkBase):
     redis = RedisSubscriber() # pydev: force code completion
     def __init__(self, redis):
         redis.messageReceived = self.messageReceived
@@ -187,7 +187,7 @@ class ThoonkPubSub(ThoonkBase):
                             'running_for': None,
                             'defer': None}
 
-        super(ThoonkPubSub, self).__init__(redis)
+        super(ThoonkSub, self).__init__(redis)
 
     def _get_sub_channel_cb(self, channel):
         return lambda arg: self._sub_channel(channel)
@@ -288,7 +288,7 @@ class ThoonkPubSub(ThoonkBase):
         d = self._subscribed['defer']
         d.callback(True)
 
-class ThoonkPubSubFactory(ThoonkFactory):
+class ThoonkSubFactory(ThoonkPubFactory):
     protocol = RedisSubscriber
-    protocol_wrapper = ThoonkPubSub
+    protocol_wrapper = ThoonkSub
 
