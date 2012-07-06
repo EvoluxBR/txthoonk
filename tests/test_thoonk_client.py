@@ -196,6 +196,32 @@ class Test(unittest.TestCase):
 
         self.assertEqual(ret, config)
 
+    ############################################################################
+    #  Tests for delete feed
+    ############################################################################
+    @defer.inlineCallbacks
+    def testDeleteFeed(self):
+        feed_name = "test_feed"
+        config = {'name': 'feed', 'surname': 'blow'}
+
+        # delete a non-existing feed
+        from txthoonk.client import FeedDoesNotExist
+        self.assertFailure(self.pub.delete_feed("teste"), FeedDoesNotExist)
+
+        yield self.pub.create_feed(feed_name, config)
+        feed_exists = yield self.pub.feed_exists(feed_name)
+        self.assertTrue(feed_exists);
+
+        ret = yield self.pub.delete_feed(feed_name)
+        self.assertTrue(ret)
+
+        feed_exists = yield self.pub.feed_exists(feed_name)
+        self.assertFalse(feed_exists);
+
+        # check config has on redis
+        ret = yield self.pub.redis.hgetall("feed.config:%s" % feed_name)
+        self.assertEqual(ret, {})
+
 
 if __name__ == "__main__":
     pass

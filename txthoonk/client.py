@@ -117,6 +117,42 @@ class ThoonkPub(ThoonkBase):
 
         return self.redis.sadd("feeds", feed_name).addCallback(_publish)
 
+    def delete_feed(self, feed_name):
+        hash_feed_config = "feed.config:%s" % feed_name
+
+        def _exec_check(bulk_result):
+            # All defers must be succeed
+            assert all([a[0] for a in bulk_result])
+            # assert number of commands 
+            assert len(bulk_result) == 7
+
+            multi_result = bulk_result[-1][1]
+            if multi_result:
+                # assert number commands in transaction
+                assert len(multi_result) == 3
+                # check if feed_name existed when was deleted
+                exists = multi_result[0]
+                if not exists:
+                    return defer.fail(FeedDoesNotExist())
+                return True
+
+            # transaction fail, repeat it
+            return self.delete_feed(feed_name)
+
+        defers = []
+        # issue all commands in order to avoid concurrent calls
+        defers.append(self.redis.watch("feeds")) #0
+        defers.append(self.redis.watch(hash_feed_config)) #1
+        # begin transaction
+        defers.append(self.redis.multi()) #2
+        defers.append(self.redis.srem("feeds", feed_name)) #3 - #0
+        defers.append(self.redis.delete(hash_feed_config)) #4 - #1
+        defers.append(self._publish_channel("delfeed", feed_name)) #5 - #2
+        # end transaction
+        defers.append(self.redis.execute()) #6
+
+        return defer.DeferredList(defers).addCallback(_exec_check)
+
     def feed_exists(self, feed_name):
         """
         Check if a given feed exists.
