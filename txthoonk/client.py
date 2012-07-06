@@ -230,12 +230,6 @@ class ThoonkSub(ThoonkBase):
 
         super(ThoonkSub, self).__init__(redis)
 
-    def set_redis(self, redis):
-        # FIXME: on (re)connect (re)subscribe all channels
-        redis.messageReceived = self.messageReceived
-        redis.channelSubscribed = self.channelSubscribed
-        super(ThoonkSub, self).set_redis(redis)
-
     def _get_sub_channel_cb(self, channel):
         return lambda arg: self._sub_channel(channel)
 
@@ -266,6 +260,12 @@ class ThoonkSub(ThoonkBase):
         self._subscribed['running_for'] = channel
 
         return d.addCallback(set_subscribed)
+
+    def set_redis(self, redis):
+        # FIXME: on (re)connect (re)subscribe all channels
+        redis.messageReceived = self.messageReceived
+        redis.channelSubscribed = self.channelSubscribed
+        super(ThoonkSub, self).set_redis(redis)
 
     def register_handler(self, evt, handler):
         """
