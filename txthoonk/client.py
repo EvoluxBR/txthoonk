@@ -24,9 +24,13 @@ class NotListening(Exception):
 class ThoonkBase(object):
     SEPARATOR = "\x00"
     implements(interfaces.IProtocol)
+
     def __init__(self, redis):
-        self.redis = redis
+        self.set_redis(redis)
         self._uuid = uuid.uuid4().hex
+
+    def set_redis(self, redis):
+        self.redis = redis
 
     def dataReceived(self, data):
         """
@@ -172,10 +176,8 @@ class ThoonkPubFactory(ReconnectingClientFactory):
 
 class ThoonkSub(ThoonkBase):
     redis = RedisSubscriber() # pydev: force code completion
-    def __init__(self, redis):
-        redis.messageReceived = self.messageReceived
-        redis.channelSubscribed = self.channelSubscribed
 
+    def __init__(self, redis):
         self._handlers = {'id_gen': itertools.count(), #@UndefinedVariable
                           'evt_handlers': {'create': dict()},
                           'id2evt' : {}}
@@ -188,6 +190,11 @@ class ThoonkSub(ThoonkBase):
                             'defer': None}
 
         super(ThoonkSub, self).__init__(redis)
+
+    def set_redis(self, redis):
+        redis.messageReceived = self.messageReceived
+        redis.channelSubscribed = self.channelSubscribed
+        super(ThoonkSub, self).set_redis(redis)
 
     def _get_sub_channel_cb(self, channel):
         return lambda arg: self._sub_channel(channel)
