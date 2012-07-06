@@ -101,7 +101,7 @@ class ThoonkPub(ThoonkBase):
         entry with the class of the feed type implementation.
         
         Arguments:
-            feed -- The name of the new feed.
+            feed_name -- The name of the new feed.
             config -- A dictionary of configuration values.
         """
         def _set_config(ret):
@@ -118,6 +118,12 @@ class ThoonkPub(ThoonkBase):
         return self.redis.sadd("feeds", feed_name).addCallback(_publish)
 
     def delete_feed(self, feed_name):
+        """
+        Delete a given feed.
+        
+        Arguments:
+        feed_name -- The name of the feed.
+        """
         hash_feed_config = "feed.config:%s" % feed_name
 
         def _exec_check(bulk_result):
@@ -158,7 +164,7 @@ class ThoonkPub(ThoonkBase):
         Check if a given feed exists.
 
         Arguments:
-            feed -- The name of the feed.
+            feed_name -- The name of the feed.
         """
 
         return self.redis.sismember("feeds", feed_name)
@@ -168,7 +174,7 @@ class ThoonkPub(ThoonkBase):
         Set the configuration for a given feed.
         
         Arguments:
-            feed -- The name of the feed.
+            feed_name -- The name of the feed.
             config -- A dictionary of configuration values.
         """
         def _exists(ret):
@@ -179,6 +185,7 @@ class ThoonkPub(ThoonkBase):
             for k, v in config.items():
                 dl.append(self.redis.hset('feed.config:%s' % feed_name, k, v))
             return defer.DeferredList(dl)
+
         return self.feed_exists(feed_name).addCallback(_exists)
 
     def get_feed_names(self):
@@ -317,7 +324,6 @@ class ThoonkSub(ThoonkBase):
         Called when this connection is subscribed to a channel that
         has received a message published on it.
         """
-
         handlers = self._handlers['channel_handlers'].get(channel)
         if handlers is None:
             return

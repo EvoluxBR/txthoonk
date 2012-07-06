@@ -33,10 +33,10 @@ class Test(unittest.TestCase):
             import os
             redis_conf = os.path.join(os.path.dirname(__file__), "redis.conf")
             msg = ("NOTE: Redis server not running on %s:%s. Please start \n"
-                    "a local instance of Redis on this port to run unit tests \n"
-                    "against.\n\n"
-                    "You can use our supplied config:\n"
-                    "  redis-server %s\n") % (REDIS_HOST, REDIS_PORT, redis_conf)
+                   "a local instance of Redis on this port to run unit tests \n"
+                   "against.\n\n"
+                   "You can use our supplied config:\n"
+                   "  redis-server %s\n") % (REDIS_HOST, REDIS_PORT, redis_conf)
             raise unittest.SkipTest(msg)
 
         endpoint = TCP4ClientEndpoint(reactor, REDIS_HOST, REDIS_PORT)
@@ -60,11 +60,14 @@ class Test(unittest.TestCase):
         msgRcvOrig = self.sub.redis.messageReceived
         self.msg_rcv = defer.Deferred()
         def msgRcvWrp(*args, **kwargs):
+            """
+            Configure a callback to be executed in each message received by
+            RedisSubscriber
+            """
             msgRcvOrig(*args, **kwargs)
             self.msg_rcv.callback(None)
             self.msg_rcv = defer.Deferred()
         self.sub.redis.messageReceived = msgRcvWrp
-
 
     def check_called(self, func):
         """decorator to use in order to check if a callback was called"""
@@ -126,7 +129,7 @@ class Test(unittest.TestCase):
             self.assertEqual(ret_name, feed1)
         id_ = yield self.sub.register_handler('create', onCreate)
 
-        # Assuring that redis.messageReceived (sub was called)
+        # Assuring that redis.messageReceived (sub) was called
         cb = self.msg_rcv
         yield self.pub.create_feed(feed1)
         yield cb
@@ -142,7 +145,7 @@ class Test(unittest.TestCase):
         # removing
         self.sub.remove_handler(id_)
 
-        # Assuring that redis.messageReceived (sub was called)
+        # Assuring that redis.messageReceived (sub) was called
         cb = self.msg_rcv
         yield self.pub.create_feed(feed2)
         yield cb
@@ -185,7 +188,8 @@ class Test(unittest.TestCase):
 
         # set config on a non existing feed
         from txthoonk.client import FeedDoesNotExist
-        self.assertFailure(self.pub.set_config(feed_name, config), FeedDoesNotExist)
+        self.assertFailure(self.pub.set_config(feed_name, config),
+                           FeedDoesNotExist)
 
         yield self.pub.create_feed(feed_name)
 
