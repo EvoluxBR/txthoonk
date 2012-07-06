@@ -150,6 +150,7 @@ class ThoonkPub(ThoonkBase):
 
             multi_result = bulk_result[-1][1]
             if multi_result:
+                # transaction done :D
                 # assert number commands in transaction
                 assert len(multi_result) == 3
                 # check if feed_name existed when was deleted
@@ -158,7 +159,8 @@ class ThoonkPub(ThoonkBase):
                     return defer.fail(FeedDoesNotExist())
                 return True
 
-            # transaction fail, repeat it
+            # transaction fail :-(
+            # repeat it
             return self.delete_feed(feed_name)
 
         defers = []
