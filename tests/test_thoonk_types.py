@@ -97,6 +97,16 @@ class TestThoonkFeed(TestThoonkBase):
         ret = yield feed.get_item(id_ + "123")
         self.assertIsNone(ret)
 
+    @defer.inlineCallbacks
+    def testFeedGetIds(self):
+        item = "my beautiful item"
+        id_ = "myid"
+        feed = self.feed
+
+        yield feed.publish(item, id_)
+
+        ret = yield feed.get_ids()
+        self.assertEqual(ret, [id_])
 
 if __name__ == "__main__":
     pass
