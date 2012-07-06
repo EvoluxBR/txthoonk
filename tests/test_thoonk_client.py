@@ -120,7 +120,7 @@ class Test(unittest.TestCase):
         yield cb
 
     @defer.inlineCallbacks
-    def testHandlerCreateRemove(self):
+    def testHandlerCreateRegisterRemove(self):
         feed1 = 'feed1'
         feed2 = 'feed2'
 
