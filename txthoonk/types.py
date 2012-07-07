@@ -69,7 +69,7 @@ class Feed(object):
 
             # delete ids
             # id is already on feed, we don't need to delete one
-            if has_id and delete_ids > 1:
+            if has_id and len(delete_ids) > 0:
                 try:
                     # try to choose itself if marked to be deleted
                     delete_ids.remove(id_)
