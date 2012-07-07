@@ -61,19 +61,26 @@ class Feed(object):
             # repeat it
             return self.publish(item, id_)
 
-        def _do_publish(delete_ids):
+        def _do_publish(delete_ids, has_id):
             defers = []
 
             # begin transaction
             defers += [redis.multi()]
 
             # delete ids
+            # id is already on feed, we don't need to delete one
+            if has_id and delete_ids > 1:
+                try:
+                    # try to choose itself if marked to be deleted
+                    delete_ids.remove(id_)
+                except ValueError:
+                    # else remove the last
+                    delete_ids.pop()
+
             for i in delete_ids:
-                if i == id_:
-                    continue
                 defers += [redis.zrem(self.feed_ids, i)]
-                defers += [redis.hel(self.feed_items, i)]
-                defers += [pub.publish_channel(self.channel_retract, id)]
+                defers += [redis.hdel(self.feed_items, i)]
+                defers += [pub.publish_channel(self.channel_retract, i)]
 
             defers += [redis.incr(self.feed_publishes)] # -3
             defers += [redis.hset(self.feed_items, id_, item)] # -2
@@ -87,23 +94,26 @@ class Feed(object):
             # All defers must be succeed
             assert all([a[0] for a in bulk_result])
             # assert number of commands
-            assert len(bulk_result) == 3
+            assert len(bulk_result) == 4
 
+            has_id = bulk_result[-2][1]
             config = bulk_result[-1][1]
             max_ = config.get("max_length")
             if max_ is not None and max_.isdigit():
                 max_ = int(max_)
                 # get ids to be deleted
-                d = redis.zrange(self.feed_ids, 0, -(max_ + 1))
+                d = redis.zrange(self.feed_ids, 0, -(max_))
             else:
                 # no ids to be deleted
                 d = defer.succeed([])
-            return d.addCallback(_do_publish)
+
+            return d.addCallback(_do_publish, has_id)
 
         defers = []
         defers.append(redis.watch(self.feed_config)) #0
         defers.append(redis.watch(self.feed_ids)) #1
-        defers.append(self.get_config()) #2
+        defers.append(self.has_id(id_)) #3
+        defers.append(self.get_config()) #4
         return defer.DeferredList(defers).addCallback(_got_config)
 
     def get_item(self, id_):
