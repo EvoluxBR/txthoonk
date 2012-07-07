@@ -109,6 +109,24 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(set(ret), set(ids_01))
 
     ############################################################################
+    #  Tests for has_id
+    ############################################################################
+    @defer.inlineCallbacks
+    def testFeedHasId(self):
+        item = "my beautiful item"
+        id_ = "myid"
+        feed = self.feed
+
+        yield feed.publish(item, id_)
+
+        ret = yield feed.has_id(id_)
+        self.assertTrue(ret)
+
+        # non existing item
+        ret = yield feed.has_id(id_ + "123")
+        self.assertFalse(ret)
+
+    ############################################################################
     #  Tests for get*
     ############################################################################
     @defer.inlineCallbacks

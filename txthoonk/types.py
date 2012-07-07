@@ -109,6 +109,11 @@ class Feed(object):
     def get_item(self, id_):
         return self.pub.redis.hget(self.feed_items, id_)
 
+    def has_id(self, id_):
+        d = self.pub.redis.hget(self.feed_items, id_)
+        d.addCallback(lambda i: i is not None)
+        return d
+
     def get_ids(self):
         return self.pub.redis.zrange(self.feed_ids, 0, -1)
 
