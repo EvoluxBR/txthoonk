@@ -128,6 +128,14 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(len(ret), len(ids_02))
         self.assertEqual(set(ret), set(ids_02))
 
+        # set a new max_length
+        feed.set_config({'max_length': '10'})
+
+        # force a publish
+        yield feed.publish("non")
+        ret = yield feed.get_ids()
+        self.assertEqual(len(ret), 10)
+
 
     ############################################################################
     #  Tests for has_id
