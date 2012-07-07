@@ -46,7 +46,7 @@ class Feed(object):
                 # Transaction done :D
                 # assert number commands in transaction
                 assert len(multi_result) >= 3
-                # check if feed_name existed when was deleted
+                # check if id_ existed when added
                 non_exists = multi_result[-1]
                 if non_exists:
                     d = pub.publish_channel(self.channel_publish, id_, item)
