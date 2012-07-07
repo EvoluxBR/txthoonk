@@ -118,6 +118,7 @@ class Feed(object):
 
     def get_item(self, id_):
         return self.pub.redis.hget(self.feed_items, id_)
+    get_id = get_item
 
     def has_id(self, id_):
         d = self.pub.redis.hget(self.feed_items, id_)
