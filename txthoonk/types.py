@@ -94,7 +94,7 @@ class Feed(object):
             # All defers must be succeed
             assert all([a[0] for a in bulk_result])
             # assert number of commands
-            assert len(bulk_result) == 4
+            assert len(bulk_result) == 5
 
             has_id = bulk_result[-2][1]
             config = bulk_result[-1][1]
@@ -112,6 +112,7 @@ class Feed(object):
         defers = []
         defers.append(redis.watch(self.feed_config)) #0
         defers.append(redis.watch(self.feed_ids)) #1
+        defers.append(redis.watch(self.feed_items)) #2
         defers.append(self.has_id(id_)) #3
         defers.append(self.get_config()) #4
         return defer.DeferredList(defers).addCallback(_got_config)
@@ -121,8 +122,12 @@ class Feed(object):
     get_id = get_item
 
     def has_id(self, id_):
-        d = self.pub.redis.hget(self.feed_items, id_)
-        d.addCallback(lambda i: i is not None)
+        # ZRank has complexity O(log(n))
+        #d = self.pub.redis.zrank(self.feed_ids, id_)
+        #d.addCallback(lambda i: i is not None)
+
+        # HExists has complexity O(1)
+        d = self.pub.redis.hexists(self.feed_items, id_)
         return d
 
     def get_ids(self):
