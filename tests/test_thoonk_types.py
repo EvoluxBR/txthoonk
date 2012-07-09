@@ -266,17 +266,29 @@ class TestThoonkFeed(TestThoonkBase):
     #  Tests for retract
     ############################################################################
     @defer.inlineCallbacks
-    def testFeedRetract(self):
+    def testFeedRetractAndRetractEvent(self):
         item = "my beautiful item"
         id_ = "myid"
         feed = self.feed
+
+        @self.check_called
+        def onRetract(*args):
+            ret_id = args[0]
+            self.assertEqual(ret_id, id_)
+
+        yield self.sub.register_handler(feed.channel_retract, onRetract)
+        yield self.feed.publish(item, id_)
 
         yield feed.publish(item, id_)
 
         ret = yield feed.has_id(id_)
         self.assertTrue(ret)
 
+        # Assuring that redis.messageReceived (sub) was called
+        cb = self.msg_rcv
         yield feed.retract(id_)
+        yield cb
+
         # non existing item
         ret = yield feed.has_id(id_)
         self.assertFalse(ret)
