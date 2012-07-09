@@ -177,6 +177,26 @@ class TestThoonkFeed(TestThoonkBase):
         yield self.feed.publish(item_edited, id_)
         yield cb
 
+    @defer.inlineCallbacks
+    def testPublishEventRetract(self):
+        my_id = "myid"
+        feed = self.feed
+
+        @self.check_called
+        def onRetract(*args):
+            ret_id = args[0]
+            self.assertEqual(ret_id, my_id)
+
+        yield feed.set_config({"max_length": "1"})
+        yield self.sub.register_handler(feed.channel_retract, onRetract)
+        yield self.feed.publish("blaw", my_id)
+
+        # publish a new item
+        # Assuring that redis.messageReceived (sub) was called
+        cb = self.msg_rcv
+        yield self.feed.publish("blew")
+        yield cb
+
     ############################################################################
     #  Tests for has_id
     ############################################################################
