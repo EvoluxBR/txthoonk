@@ -340,7 +340,7 @@ class ThoonkSub(ThoonkBase):
         if not channel:
             return defer.succeed(None)
 
-        def register_callback(*args):
+        def _register_callback(*args):
             id_ = self._handlers['id_gen'].next()
 
             # store map id -> channel
@@ -354,7 +354,7 @@ class ThoonkSub(ThoonkBase):
             handlers[id_] = handler
             return id_
 
-        return self._sub_channel(channel).addCallback(register_callback)
+        return self._sub_channel(channel).addCallback(_register_callback)
 
     def remove_handler(self, id_):
         """
