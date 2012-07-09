@@ -111,7 +111,8 @@ class ThoonkPub(ThoonkBase):
         return self.publish_channel(channel, *args)
 
     def publish_channel(self, channel, *args):
-        return self.redis.publish(channel, self.SEPARATOR.join(args))
+        message = self.SEPARATOR.join(args)
+        return self.redis.publish(channel, message)
 
     def create_feed(self, feed_name, config={}):
         """
@@ -380,7 +381,8 @@ class ThoonkSub(ThoonkBase):
             return
 
         for handler in handlers.values():
-            handler(*message.split(self.SEPARATOR))
+            args = message.split(self.SEPARATOR)
+            handler(*args)
 
     def channelSubscribed(self, channel, numSubscriptions):
         """
