@@ -275,17 +275,17 @@ class TestThoonkPubSub(TestThoonkBase):
     ############################################################################
     @defer.inlineCallbacks
     def testPublishChannel(self):
-        args = self.pub.SEPARATOR.join(['a', 'b'])
-
+        args = ('a', 'b', 'abc', '', '1')
+        channel = 'mychannel'
         @self.check_called
         def onMyChannel(*ret_args):
-            pass
+            self.assertEquals(args, ret_args)
 
-        yield self.sub.register_handler('mychannel', onMyChannel)
+        yield self.sub.register_handler(channel, onMyChannel)
 
         # Assuring that redis.messageReceived (sub) was called
         cb = self.msg_rcv
-        yield self.pub.publish_channel("mychannel", *args)
+        yield self.pub.publish_channel(channel, *args)
         yield cb
 
 if __name__ == "__main__":
