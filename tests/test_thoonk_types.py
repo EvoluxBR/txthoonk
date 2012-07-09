@@ -155,6 +155,27 @@ class TestThoonkFeed(TestThoonkBase):
         yield self.feed.publish(item, id_)
         yield cb
 
+    @defer.inlineCallbacks
+    def testPublishEventEdit(self):
+        item_original = "my beautiful item_original"
+        item_edited = "my beautiful item_edited"
+        id_ = "myid"
+        feed = self.feed
+        @self.check_called
+        def onEdit(*args):
+            ret_id = args[0]
+            ret_item = args[1]
+            self.assertEqual(ret_id, id_)
+            self.assertEqual(ret_item, item_edited)
+
+        yield self.sub.register_handler(feed.channel_edit, onEdit)
+
+        yield self.feed.publish(item_original, id_)
+
+        # Assuring that redis.messageReceived (sub) was called
+        cb = self.msg_rcv
+        yield self.feed.publish(item_edited, id_)
+        yield cb
 
     ############################################################################
     #  Tests for has_id
