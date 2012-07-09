@@ -122,7 +122,7 @@ class Feed(object):
         pub = self.pub
         redis = pub.redis
 
-        def _check_config(multi_result):
+        def _check_exec(multi_result):
             if multi_result:
                 # transaction done :D
                 # assert number commands in transaction
@@ -144,7 +144,7 @@ class Feed(object):
                                                         id_))
             d.addCallback(lambda x: redis.execute())
 
-            d.addCallback(_check_config)
+            d.addCallback(_check_exec)
             return d
 
         d = redis.watch(self.feed_items)
