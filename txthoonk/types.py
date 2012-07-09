@@ -37,6 +37,8 @@ class Feed(object):
         pub = self.pub
         redis = pub.redis
 
+        id_ = str(id_)
+
         def _check_exec(bulk_result):
             # All defers must be succeed
             assert all([a[0] for a in bulk_result])
