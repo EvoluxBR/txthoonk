@@ -129,7 +129,7 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(set(ret), set(ids_02))
 
         # set a new max_length
-        feed.set_config({'max_length': '10'})
+        yield feed.set_config({'max_length': '10'})
 
         # force a publish
         yield feed.publish("non")
