@@ -22,14 +22,27 @@ class FeedDoesNotExist(Exception):
 
 
 class ThoonkBase(object):
+    """
+    Thoonk object base class.
+    """
     SEPARATOR = "\x00"
     implements(interfaces.IProtocol)
 
     def __init__(self, redis):
+        '''
+        Constructor
+
+        @param redis: the txredis instance
+        '''
         self.set_redis(redis)
         self._uuid = uuid.uuid4().hex
 
     def set_redis(self, redis):
+        '''
+        Set the txredis instance
+
+        @param redis: the txredis instance
+        '''
         self.redis = redis
 
     def dataReceived(self, data):
@@ -82,6 +95,9 @@ class ThoonkBase(object):
         self.redis.connectionMade()
 
 class ThoonkPub(ThoonkBase):
+    '''
+    Thoonk publisher class
+    '''
     redis = Redis() # pydev: force code completion
 
     def __init__(self, *args, **kwargs):
@@ -89,11 +105,26 @@ class ThoonkPub(ThoonkBase):
         super(ThoonkPub, self).__init__(*args, **kwargs)
 
     def _get_feed_type(self, kls, type_):
+        '''
+        Returns a function in order to generate a specific feed type
+
+        @param kls: the python class of feed
+        @param type_: the type of feed to be stored in.
+        '''
         config = {'type': type_}
         def _create_type(feed_name):
+            '''
+            Creates a new feed of this type.
+
+            @param feed_name: the name of the feed.
+            '''
             def _get_feed(*args):
+                """Create a new a new instance of passed class"""
                 return kls(pub=self, name=feed_name)
             def _exists(ret):
+                """
+                Called when self.feed_exists returns
+                """
                 if ret:
                     return _get_feed()
 
@@ -106,29 +137,40 @@ class ThoonkPub(ThoonkBase):
         return _create_type
 
     def _publish_channel(self, channel, *args):
-        """Calls self.publish_channel appeding self._uuid"""
+        """Calls self.publish_channel appending self._uuid at end"""
         args = list(args) + [self._uuid]
         return self.publish_channel(channel, *args)
 
     def publish_channel(self, channel, *args):
+        '''
+        Publish on channel.
+
+        @param channel: the channel where message will be published
+        @param *args: a list that will compose the message
+        '''
         message = self.SEPARATOR.join(args)
         return self.redis.publish(channel, message)
 
     def create_feed(self, feed_name, config={}):
         """
         Create a new feed with a given configuration.
-        
+
         The configuration is a dict, and should include a 'type'
         entry with the class of the feed type implementation.
-        
-        Arguments:
-            feed_name -- The name of the new feed.
-            config -- A dictionary of configuration values.
+
+        @param feed_name: The name of the new feed.
+        @param config: A dictionary of configuration values.
         """
         def _set_config(ret):
+            '''
+            Called when self._publish_channel returns.
+            '''
             return self.set_config(feed_name, config)
 
         def _publish(ret):
+            """
+            Called when redis.sadd returns.
+            """
             if ret == 1:
                 d = self._publish_channel("newfeed", feed_name)
                 d.addCallback(_set_config)
@@ -141,16 +183,15 @@ class ThoonkPub(ThoonkBase):
     def delete_feed(self, feed_name):
         """
         Delete a given feed.
-        
-        Arguments:
-        feed_name -- The name of the feed.
+
+        @param feed_name: The name of the feed.
         """
         hash_feed_config = "feed.config:%s" % feed_name
 
         def _exec_check(bulk_result):
             # All defers must be succeed
             assert all([a[0] for a in bulk_result])
-            # assert number of commands 
+            # assert number of commands
             assert len(bulk_result) == 7
 
             multi_result = bulk_result[-1][1]
@@ -186,8 +227,7 @@ class ThoonkPub(ThoonkBase):
         """
         Check if a given feed exists.
 
-        Arguments:
-            feed_name -- The name of the feed.
+        @param feed_name: The name of the feed.
         """
 
         return self.redis.sismember("feeds", feed_name)
@@ -195,10 +235,9 @@ class ThoonkPub(ThoonkBase):
     def set_config(self, feed_name, config):
         """
         Set the configuration for a given feed.
-        
-        Arguments:
-            feed_name -- The name of the feed.
-            config -- A dictionary of configuration values.
+
+        @param feed_name: The name of the feed.
+        @param config: A dictionary of configuration values.
         """
         def _exists(ret):
             if not ret:
@@ -215,10 +254,10 @@ class ThoonkPub(ThoonkBase):
         """
         Get the configuration for a given feed.
 
-        Arguments:
-            feed_name -- The name of the feed.
+        @param feed_name: The name of the feed.
 
-        Returns a defer to the config dict as the first argument
+        @return: A defer witch callback function will have a config dict
+                 as the first argument
         """
         def _exists(ret):
             if not ret:
@@ -232,15 +271,22 @@ class ThoonkPub(ThoonkBase):
         """
         Return the set of known feeds.
 
-        Returns: a defer with the set result as first argument
+        @return: a defer witch callback function will have the set result
+                as first argument
         """
         return self.redis.smembers("feeds")
 
 class ThoonkPubFactory(ReconnectingClientFactory):
+    '''
+    ThoonkPub Factory
+    '''
     protocol = Redis
     protocol_wrapper = ThoonkPub
 
     def __init__(self, *args, **kwargs):
+        '''
+        Constructor
+        '''
         self._args = args
         self._kwargs = kwargs
 
@@ -263,13 +309,21 @@ class ThoonkPubFactory(ReconnectingClientFactory):
         return self.protocol_wrapper(redis)
 
 class ThoonkSub(ThoonkBase):
+    '''
+    Thoonk Subscriber class.
+    '''
     redis = RedisSubscriber() # pydev: force code completion
 
     def __init__(self, redis):
+        '''
+        Constructor
+
+        @param redis: the txredis instance
+        '''
         self._handlers = {'id_gen': itertools.count(), #@UndefinedVariable
                           'channel_handlers': {},
                           'id2channel' : {}}
-        # delay subscribe 
+        # delay subscribe
         self._subscribed = {'running': False,
                             'subscribed': {},
                             'running_for': None,
@@ -278,9 +332,19 @@ class ThoonkSub(ThoonkBase):
         super(ThoonkSub, self).__init__(redis)
 
     def _get_sub_channel_cb(self, channel):
+        '''
+        Returns a callback in order to subscribe one channel.
+
+        @param channel: the desired channel.
+        '''
         return lambda arg: self._sub_channel(channel)
 
     def _evt2channel(self, evt):
+        '''
+        Convert Thoonk.py channels in compatible events
+
+        @param evt: the event
+        '''
         # Thoonk.py compatible events
         channel = evt
         if evt == "create":
@@ -291,7 +355,11 @@ class ThoonkSub(ThoonkBase):
 
     def _sub_channel(self, channel):
         """
-        Subscribe to a channel using a defer
+        Subscribe to a channel using a defer.
+
+        This call will queue channel subscriptions.
+
+        @param channel: the desired channel.
         """
         if self._subscribed['subscribed'].get(channel):
             # already subcribed
@@ -304,6 +372,9 @@ class ThoonkSub(ThoonkBase):
             return d
 
         def set_subscribed(*args):
+            '''
+            Called when channel was subscribed.
+            '''
             self._subscribed['running'] = False
             self._subscribed['subscribed'][channel] = True
             return True
@@ -318,6 +389,11 @@ class ThoonkSub(ThoonkBase):
         return d.addCallback(set_subscribed)
 
     def set_redis(self, redis):
+        '''
+        Set the txredis instance
+
+        @param redis: the txredis instance
+        '''
         # FIXME: on (re)connect (re)subscribe all channels
         redis.messageReceived = self.messageReceived
         redis.channelSubscribed = self.channelSubscribed
@@ -326,14 +402,18 @@ class ThoonkSub(ThoonkBase):
     def register_handler(self, evt, handler):
         """
         Register a function to respond to feed events.
-        
-        Event types:
-            - create
-            - delete
-        
-        Arguments:
-            evt -- The name of the feed event.
-            handler -- The function for handling the event.
+
+        Event types/handler params:
+        - create                 handler(feedname)
+        - newfeed                handler(feedname)
+        - delete                 handler(feedname)
+        - delfeed                handler(feedname)
+        - feed.publish:[feed]    handler(id, item)
+        - feed.retract:[feed]    handler(id)
+        - feed.edit:[feed]       handler(id, item)
+
+        @param evt: The name of the feed event.
+        @param handler: The function for handling the event.
         """
         channel = self._evt2channel(evt)
 
@@ -341,6 +421,9 @@ class ThoonkSub(ThoonkBase):
             return defer.succeed(None)
 
         def _register_callback(*args):
+            """
+            Called when channel was subscribed.
+            """
             id_ = self._handlers['id_gen'].next()
 
             # store map id -> channel
@@ -360,8 +443,7 @@ class ThoonkSub(ThoonkBase):
         """
         Unregister a function that was registered via register_handler
 
-        Arguments:
-            id_ - the handler id
+        @param id_: the handler id
         """
 
         channel = self._handlers['id2channel'].get(id_)
@@ -394,6 +476,9 @@ class ThoonkSub(ThoonkBase):
         d.callback(True)
 
 class ThoonkSubFactory(ThoonkPubFactory):
+    '''
+    ThoonkSub Factory class.
+    '''
     protocol = RedisSubscriber
     protocol_wrapper = ThoonkSub
 
