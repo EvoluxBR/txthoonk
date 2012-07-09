@@ -202,6 +202,25 @@ class TestThoonkFeed(TestThoonkBase):
         self.assertEqual(set(ret_ids), set(ids))
         self.assertEqual(set(ret_items), set(items))
 
+    ############################################################################
+    #  Tests for retract
+    ############################################################################
+    @defer.inlineCallbacks
+    def testFeedRetract(self):
+        item = "my beautiful item"
+        id_ = "myid"
+        feed = self.feed
+
+        yield feed.publish(item, id_)
+
+        ret = yield feed.has_id(id_)
+        self.assertTrue(ret)
+
+        yield feed.retract(id_)
+        # non existing item
+        ret = yield feed.has_id(id_)
+        self.assertFalse(ret)
+
 
 if __name__ == "__main__":
     pass

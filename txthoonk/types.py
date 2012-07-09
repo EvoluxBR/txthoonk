@@ -117,6 +117,43 @@ class Feed(object):
         defers.append(self.get_config()) #4
         return defer.DeferredList(defers).addCallback(_got_config)
 
+    def retract(self, id_):
+        pub = self.pub
+        redis = pub.redis
+
+        def _check_config(multi_result):
+            if multi_result:
+                # transaction done :D
+                # assert number commands in transaction
+                assert len(multi_result) == 3
+                return defer.succeed(None)
+
+            # Transaction fail :(
+            # repeat it
+            return self.retract(id_)
+
+        def _has_id(has_id):
+            if not has_id:
+                return redis.unwatch()
+            # start transaction
+            d = redis.multi()
+            d.addCallback(lambda x: redis.zrem(self.feed_ids, id_))
+            d.addCallback(lambda x: redis.hdel(self.feed_items, id_))
+            d.addCallback(lambda x: pub.publish_channel(self.channel_retract,
+                                                        id_))
+            d.addCallback(lambda x: redis.execute())
+
+            d.addCallback(_check_config)
+            return d
+
+        d = redis.watch(self.feed_items)
+        d.addCallback(lambda x: redis.watch(self.feed_items))
+        d.addCallback(lambda x: redis.watch(self.feed_ids))
+        d.addCallback(lambda x: self.has_id(id_))
+        d.addCallback(_has_id)
+
+        return d
+
     def get_item(self, id_):
         return self.pub.redis.hget(self.feed_items, id_)
     get_id = get_item
