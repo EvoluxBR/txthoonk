@@ -101,10 +101,9 @@ class Feed(object):
             has_id = bulk_result[-2][1]
             config = bulk_result[-1][1]
             max_ = config.get("max_length")
-            if max_ is not None and max_.isdigit():
-                max_ = int(max_)
+            if max_ is not None and max_.isdigit() and int(max_) > 0:
                 # get ids to be deleted
-                d = redis.zrange(self.feed_ids, 0, -(max_))
+                d = redis.zrange(self.feed_ids, 0, -int(max_))
             else:
                 # no ids to be deleted
                 d = defer.succeed([])
