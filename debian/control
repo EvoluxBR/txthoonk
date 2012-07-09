@@ -7,14 +7,9 @@ Standards-Version: 3.8.4
 
 Package: python-txthoonk
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}
+Depends: ${misc:Depends}, ${python:Depends}, python-twisted (>= 10.1.0)
 XB-Python-Version: ${python:Versions}
 Provides: ${python:Provides}
 Description: Python/Twisted client for Thoonk
- txthoonk
- ========
- .
- A Thoonk client library for Twisted Python.
- .
+ txThoonk is a Thoonk client library for Twisted Python.
  Read more about Thoonk at http://blog.thoonk.com
- .
