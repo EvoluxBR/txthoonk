@@ -94,7 +94,7 @@ class TestThoonkFeed(TestThoonkBase):
         feed = self.feed
 
         # set max_length
-        feed.set_config({'max_length': '20'})
+        feed.set_config({'max_length': len(ids_02)})
 
         # full it
         for id_, item in zip(ids_01, items_01):
