@@ -136,6 +136,11 @@ class TestThoonkFeed(TestThoonkBase):
         ret = yield feed.get_ids()
         self.assertEqual(len(ret), 10)
 
+        # another publish
+        yield feed.publish("none")
+        ret = yield feed.get_ids()
+        self.assertEqual(len(ret), 10)
+
     @defer.inlineCallbacks
     def testPublishEvent(self):
         item = "my beautiful item"
