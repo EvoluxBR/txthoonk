@@ -75,7 +75,7 @@ class Feed(object):
         '''
         return self.pub.set_config(self.name, conf)
 
-    def publish(self, item, id_=uuid.uuid4().hex):
+    def publish(self, item, id_=None):
         '''
         Publish an item to the feed, or replace an existing item.
 
@@ -90,6 +90,9 @@ class Feed(object):
         '''
         pub = self.pub
         redis = pub.redis
+
+        if id_ is None:
+            id_ = uuid.uuid4().hex
 
         id_ = str(id_)
 
