@@ -50,7 +50,7 @@ def runTest01():
 
     feed_name = "test"
     #flush redis
-    yield pub.redis.flushdb
+    yield pub.redis.flushdb()
 
     # setup handlers
     id_ = yield sub.register_handler("newfeed", newfeed)
